@@ -1,7 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <sys/wait.h>
+# include "structs.h"
 
 #define READ 0
 #define WRITE 1
@@ -25,7 +26,7 @@ pid_t reader(int* pipe)
 		dup2(pipe[1], STDOUT_FILENO);
 		close(pipe[0]);
 
-		execl("imageReader", "-i", NULL);
+		execl("imageReader", "-n", "1", NULL);
 		printf("Fallo de execl().\n");
 		exit(-1);
 	}
@@ -47,13 +48,13 @@ int main(int argc, char *argv[])
 	pipe(pipe4);
 	pipe(pipe5);
 
-	char buffer[100];
+	Image* img = (Image*)malloc(sizeof(Image));
 
 	pid_t* processes = (pid_t*)calloc(5, sizeof(int));
 
 	processes[0] = reader(pipe1);
 
-	read(pipe1[READ], buffer, 100);
+	read(pipe1[READ], img, sizeof(Image*));
 
 
 
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
 		waitpid(processes[i], NULL, 0);
 	}
 
-	printf("%s\n", buffer);
+	printf("CTM %i\n", img->height);
 	printf("kasjdkjasd\n");
 	return 0;
 }
