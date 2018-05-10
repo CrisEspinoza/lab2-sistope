@@ -56,7 +56,6 @@ int main(int argc, char *argv[])
 	read(pipe1[READ], buffer, 100);
 
 
-
 	for (int i = 0; i < 5; ++i)
 	{
 		waitpid(processes[i], NULL, 0);

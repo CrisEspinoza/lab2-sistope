@@ -13,6 +13,8 @@ int openImage(int image)
 
 int main(int argc, char *argv[])
 {
+	Image* image = (Image*)malloc(sizeof(Image));
+	image->height = 1;
 	write(STDOUT_FILENO, "HOLA MUNDO", 33);
 	return 0;
 }
