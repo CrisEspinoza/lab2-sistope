@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
 	read(pipe1[READ], img, sizeof(Image*));
 
 
-
 	for (int i = 0; i < 5; ++i)
 	{
 		waitpid(processes[i], NULL, 0);

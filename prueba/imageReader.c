@@ -98,6 +98,7 @@ Image* readImg(char* name)
 
 int main(int argc, char *argv[])
 {
+<<<<<<< HEAD
 	if(argc != 2)
 	{
 		perror("## CANTIDAD DE ARGUMENTOS INVALIDA PARA LA APERTURA DE LA IMAGEN ##");
