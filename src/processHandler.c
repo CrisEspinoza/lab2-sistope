@@ -2,13 +2,13 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <sys/wait.h>
-# include "structs.h"
+# include "../utils/structs.h"
 
 #define READ 0
 #define WRITE 1
 
 
-pid_t reader(int* pipe)
+pid_t reader(int* pipe, int images)
 {
 	pid_t pid = fork();
 	if(pid < 0)
@@ -36,33 +36,21 @@ pid_t reader(int* pipe)
 
 int main(int argc, char *argv[])
 {
-	int pipe1[2];
-	int pipe2[2];
-	int pipe3[2];
-	int pipe4[2];
-	int pipe5[2];
 
-	pipe(pipe1);
-	pipe(pipe2);
-	pipe(pipe3);
-	pipe(pipe4);
-	pipe(pipe5);
+	// Falta todo lo del getopt
+	int myPipe[2];
+	pipe(myPipe);
+
 
 	Image* img = (Image*)malloc(sizeof(Image));
 
-	pid_t* processes = (pid_t*)calloc(5, sizeof(int));
+	pid_t processReader = reader(myPipe, 5);
 
-	processes[0] = reader(pipe1);
+	read(myPipe[READ], img, sizeof(Image*));
 
-	read(pipe1[READ], img, sizeof(Image*));
+	printf("Realizando lectura de imagen %i\n", img->height);
 
+	waitpid(processReader, NULL, 0);
 
-	for (int i = 0; i < 5; ++i)
-	{
-		waitpid(processes[i], NULL, 0);
-	}
-
-	printf("CTM %i\n", img->height);
-	printf("kasjdkjasd\n");
 	return 0;
 }

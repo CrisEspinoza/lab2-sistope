@@ -1,8 +1,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# include "structs.h"
-# include "imagelib.h"
+# include "../utils/structs.h"
 
 /*4. Análisis de propiedad
 

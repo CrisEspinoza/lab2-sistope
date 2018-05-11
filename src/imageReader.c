@@ -1,8 +1,8 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <unistd.h>
-# include "structs.h"
-# include "bmplib.c"
+# include "../utils/structs.h"
+# include "../utils/bmplib.c"
 
 #define READ 0
 #define WRITE 1
@@ -95,16 +95,53 @@ Image* readImg(char* name)
 	return img;
 }
 
+pid_t toGray(int* pipeIn, int* pipeOut, Image* myImage)
+{
+	pid_t pid = fork();
+	if(pid < 0)
+	{
+		printf("Fallo de fork() en apertura de imagen.\n");
+		exit(-1);
+	}
+	else if(pid > 0)
+	{
+		return pid;
+	}
+	else
+	{
+
+		dup2(pipeIn[WRITE], STDOUT_FILENO);
+		close(pipeIn[READ]);
+
+		execl("convertToGray", "-", NULL);
+		printf("Fallo de execl().\n");
+		exit(-1);
+	}
+}
+
+
 
 int main(int argc, char *argv[])
 {
-<<<<<<< HEAD
 	if(argc != 2)
 	{
 		perror("## CANTIDAD DE ARGUMENTOS INVALIDA PARA LA APERTURA DE LA IMAGEN ##");
 		exit(0);
 	}
-	Image* image = readImg(argv[1]);
-	write(STDOUT_FILENO, image, sizeof(Image*));
+
+	int myPipe1[2];
+	int myPipe2[2];
+	pipe(myPipe1);
+	pipe(myPipe2);
+
+	Image* img = readImg(argv[1]);
+
+	pid_t pid = toGray(myPipe1, myPipe2, img);
+
+
+	//pid_t processGray = toGray(myPipe1, myPipe2, )
+
+	//write(STDOUT_FILENO, image, sizeof(Image*));
+
 	return 0;
 }

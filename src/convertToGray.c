@@ -1,8 +1,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# include "structs.h"
-# include "imagelib.h"
+# include "../utils/structs.h"
 
 /* 2. Conversión a imagen en escala de grises
 Entrada: Entra una imagen
@@ -22,4 +21,11 @@ Image* convertToGray(Image* myImage)
 			myImage->matrix[i][j].blue = tmp;
 		}
 	return myImage;
+}
+
+int main(int argc, char *argv[])
+{
+	
+	//write(STDOUT_FILENO, myImage, 33);
+	return 0;
 }

@@ -1,8 +1,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# include "structs.h"
-# include "imagelib.h"
+# include "../utils/structs.h"
 
 /* 5. Escritura de resultados
 Entrada: Recibe una bandera y una imagen y por ultimo el numero de la imagen
@@ -21,12 +20,13 @@ void writeImg(int image, Image* myImage, int flag)
 		printf("|  imagen_%i   |         yes       |\n", image);
 	else if (flag == 1 )
 		printf("|  imagen_%i   |         no        |\n", image);
-	binToBmp(image, myImage); // Funcion que transforma la matriz binarizada a BMP.
+	//binToBmp(image, myImage); // Funcion que transforma la matriz binarizada a BMP.
 
 	if (flag == 1)
 		printf("|_________________________________|\n");
 	printf("Proceso terminado\n");
 }
+
 
 int main()
 {

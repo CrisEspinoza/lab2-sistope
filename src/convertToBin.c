@@ -2,8 +2,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 
-# include "structs.h"
-# include "imagelib.h"
+# include "../utils/structs.h"
 
 
 /* 3. Binarización de imagen
