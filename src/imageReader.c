@@ -1,11 +1,13 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <unistd.h>
+# include <sys/wait.h>
+# include <sys/poll.h>
 # include "../utils/structs.h"
 # include "../utils/bmplib.c"
 
-#define READ 0
-#define WRITE 1
+# define READ 0
+# define WRITE 1
 
 /*
 Entrada: Enteros que representan la anchura y altura de la imagen.
@@ -55,8 +57,7 @@ Image* loadImage(FILE* myFile, InfoHeader header)
  			fread(&myPixel.red, sizeof(char), 1, myFile);
  			fread(&myPixel.blue, sizeof(char), 1, myFile);
  			fread(&myPixel.green, sizeof(char), 1, myFile);
- 			if(myImage->header.bpp == 32)
- 				fread(&myPixel.alpha, sizeof(char), 1, myFile);
+ 			fread(&myPixel.alpha, sizeof(char), 1, myFile);
  			myImage->matrix[i][j] = myPixel; 			
  		}
  	return myImage;
@@ -70,10 +71,7 @@ Image* open(char* myFile)
 {
  	FILE* file = fopen(myFile, "rb"); // Abrir el archivo en modo binario
 	if(!file)
-	{
-		perror("## NO EXISTE EL FICHERO PARA LA LECRURA ##");
 		exit(0);
-	}
 	InfoHeader infoh = readInfoHeader(file);
 	Image* myImage = loadImage(file, infoh);
 	fclose(file);
@@ -88,14 +86,16 @@ Salida: Estructura Image con todos sus valores correspondientes.
 Image* readImg(char* name)
 {
 	char route[60];
+
 	strcat(route, "../images/imagen_");
 	strcat(route, name);
     strcat(route, ".bmp");
+
     Image* img = open(route);
 	return img;
 }
 
-pid_t toGray(int* pipeIn, int* pipeOut, Image* myImage)
+pid_t toGray(int* pipeIn)
 {
 	pid_t pid = fork();
 	if(pid < 0)
@@ -105,16 +105,16 @@ pid_t toGray(int* pipeIn, int* pipeOut, Image* myImage)
 	}
 	else if(pid > 0)
 	{
+		//close(pipeIn[READ]);
 		return pid;
 	}
 	else
 	{
+		close(pipeIn[WRITE]);
+		dup2(pipeIn[READ], STDOUT_FILENO);
 
-		dup2(pipeIn[WRITE], STDOUT_FILENO);
-		close(pipeIn[READ]);
-
-		execl("convertToGray", "-", NULL);
-		printf("Fallo de execl().\n");
+		execlp("./convertToGray", "-", NULL);
+		perror("Fallo de execl()");
 		exit(-1);
 	}
 }
@@ -129,19 +129,33 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	int myPipe1[2];
-	int myPipe2[2];
-	pipe(myPipe1);
-	pipe(myPipe2);
+	int myPipeToGray[2];
+	pipe(myPipeToGray);
 
+	pid_t pidToGray = toGray(myPipeToGray);
+
+	close(myPipeToGray[READ]);
 	Image* img = readImg(argv[1]);
+	
+	write(myPipeToGray[WRITE], &img->height, sizeof(int));
+	write(myPipeToGray[WRITE], &img->width, sizeof(int));
+	write(myPipeToGray[WRITE], &img->header, sizeof(InfoHeader));
 
-	pid_t pid = toGray(myPipe1, myPipe2, img);
+	int i, j;
+	for(i = 0; i < img->height; i++)
+		for(j = 0; j < img->width; j++)
+		{
+			write(myPipeToGray[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
+			write(myPipeToGray[WRITE], &img->matrix[i][j].blue, sizeof(unsigned char));
+			write(myPipeToGray[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
+			write(myPipeToGray[WRITE], &img->matrix[i][j].alpha, sizeof(unsigned char));
+		}
 
+	wait(&pidToGray);
 
-	//pid_t processGray = toGray(myPipe1, myPipe2, )
+	perror("Conversion a grises hecho....");
 
-	//write(STDOUT_FILENO, image, sizeof(Image*));
+	write(STDOUT_FILENO, "Funca", 10);
 
 	return 0;
 }

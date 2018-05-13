@@ -1,8 +1,13 @@
 # include <stdio.h>
 # include <stdlib.h>
+# include <unistd.h>
+# include <sys/wait.h>
+# include <sys/poll.h>
 
 # include "../utils/structs.h"
 
+# define READ 0
+# define WRITE 1
 /*4. Análisis de propiedad
 
 Entrada: Recibe como parametro un umbral y una imagen 
@@ -27,7 +32,72 @@ void classification (int umbral ,Image* myImage)
 		myImage->isNearlyBlack = 0;	
 }
 
-int main()
+pid_t toWrite(int* pipe)
 {
+	pid_t pid = fork();
+	if(pid < 0)
+	{
+		perror("Fallo de fork() en la clasificacion de la imagen.");
+		exit(-1);
+	}
+	else if(pid > 0)
+	{
+		close(pipe[READ]);
+		return pid;
+	}
+	else
+	{
+		close(pipe[WRITE]);
+		dup2(pipe[READ], STDOUT_FILENO);
+
+		execlp("./writeImage", "-", NULL);
+		perror("Fallo de execlp()");
+		exit(-1);
+	}
+}
+
+int main(int argc, char *argv[])
+{
+	int myPipeToWrite[2];
+	pipe(myPipeToWrite);
+
+	Image* img = (Image*)malloc(sizeof(Image));
+
+	read(STDOUT_FILENO, &img->height, sizeof(int));
+	read(STDOUT_FILENO, &img->width, sizeof(int));
+	read(STDOUT_FILENO, &img->header, sizeof(InfoHeader));
+
+	img->matrix = (Pixel**)malloc(sizeof(Pixel*) * img->height);
+	int i, j;
+
+	for(i = 0; i < img->height; i++)
+	{
+		img->matrix[i] = (Pixel*)malloc(sizeof(Pixel) * img->width);
+		for(j = 0; j < img->width; j++)
+		{
+			read(STDOUT_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
+			read(STDOUT_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
+			read(STDOUT_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
+			read(STDOUT_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
+		}
+	}
+
+	pid_t pidToWrite = toWrite(myPipeToWrite);
+
+	classification(10, img);
+
+	write(myPipeToWrite[WRITE], &img->height, sizeof(int));
+	write(myPipeToWrite[WRITE], &img->width, sizeof(int));
+	write(myPipeToWrite[WRITE], &img->header, sizeof(InfoHeader));
+	for(i = 0; i < img->height; i++)
+		for(j = 0; j < img->width; j++)
+		{
+			write(myPipeToWrite[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
+			write(myPipeToWrite[WRITE], &img->matrix[i][j].blue, sizeof(unsigned char));
+			write(myPipeToWrite[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
+			write(myPipeToWrite[WRITE], &img->matrix[i][j].alpha, sizeof(unsigned char));
+		}
+
+	wait(&pidToWrite);
 	
 }
