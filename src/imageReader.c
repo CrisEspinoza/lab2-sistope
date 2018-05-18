@@ -146,10 +146,11 @@ int main(int argc, char *argv[])
 	for(i = 0; i < img->height; i++)
 		for(j = 0; j < img->width; j++)
 		{
-			write(myPipeToGray[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
+			if(img->header.bpp == 32)
+				write(myPipeToGray[WRITE], &img->matrix[i][j].alpha, sizeof(unsigned char));
 			write(myPipeToGray[WRITE], &img->matrix[i][j].blue, sizeof(unsigned char));
 			write(myPipeToGray[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
-			write(myPipeToGray[WRITE], &img->matrix[i][j].alpha, sizeof(unsigned char));
+			write(myPipeToGray[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 
 	wait(&pidToGray);

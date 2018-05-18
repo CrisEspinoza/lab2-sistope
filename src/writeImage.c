@@ -101,10 +101,11 @@ int main(int argc, char *argv[])
 		img->matrix[i] = (Pixel*)malloc(sizeof(Pixel) * img->width);
 		for(j = 0; j < img->width; j++)
 		{
-			read(STDOUT_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
+			if(img->header.bpp == 32)
+				read(STDOUT_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
 			read(STDOUT_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
+			read(STDOUT_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
+			read(STDOUT_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 	}
 	perror("Llega sano y salvo a escribir la imagen");
