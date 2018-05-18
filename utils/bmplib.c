@@ -82,7 +82,7 @@ void binToBmp(int image, Image* myImage)
 	char* number;
 	route = (char*)malloc(sizeof(char)*50);
 	number = (char*)malloc(sizeof(char)*50);
-	strcpy(route,"../images/imagenbin_");
+	strcpy(route,"../images/zimagenbin_");
 	InfoHeader infoHeader = myImage->header;
 	sprintf(number, "%d", image);
 	strcat(route, number);

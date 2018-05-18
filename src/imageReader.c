@@ -55,9 +55,10 @@ Image* loadImage(FILE* myFile, InfoHeader header)
  		for(j = 0; j < myImage->width; j++)
  		{
  			fread(&myPixel.red, sizeof(char), 1, myFile);
- 			fread(&myPixel.blue, sizeof(char), 1, myFile);
  			fread(&myPixel.green, sizeof(char), 1, myFile);
- 			fread(&myPixel.alpha, sizeof(char), 1, myFile);
+ 			fread(&myPixel.blue, sizeof(char), 1, myFile);
+ 			if(myImage->header.bpp == 32)
+ 				fread(&myPixel.alpha, sizeof(char), 1, myFile);
  			myImage->matrix[i][j] = myPixel; 			
  		}
  	return myImage;

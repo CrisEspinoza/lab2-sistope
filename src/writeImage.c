@@ -53,7 +53,8 @@ void binToBmp(int image, Image* myImage)
 			fwrite(&myImage->matrix[i][j].red, 1, 1, myFile);
 			fwrite(&myImage->matrix[i][j].green, 1, 1, myFile);
 			fwrite(&myImage->matrix[i][j].blue, 1, 1, myFile);
- 			fwrite(&myImage->matrix[i][j].alpha, 1, 1, myFile);
+			if(myImage->header.bpp == 32)
+ 				fwrite(&myImage->matrix[i][j].alpha, 1, 1, myFile);
 		}
 	fclose(myFile);
 	free(route);
