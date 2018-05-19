@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
 	pid_t pidToClass = toWrite(myPipeToClass);
 
-	img = convertToBin(50 ,img);
+	img = convertToBin(10 ,img);
 
 	write(myPipeToClass[WRITE], &img->height, sizeof(int));
 	write(myPipeToClass[WRITE], &img->width, sizeof(int));

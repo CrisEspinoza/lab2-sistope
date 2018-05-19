@@ -25,7 +25,7 @@ pid_t reader(int* pipe, int images)
 	{
 		close(pipe[READ]); // se cierra canal de lectura
 		dup2(pipe[WRITE], STDOUT_FILENO);
-		execlp("./imageReader", "-n", "2", NULL);
+		execlp("./imageReader", "-n", "1", NULL);
 		printf("Fallo de execl().\n");
 		exit(-1);
 	}
