@@ -9,6 +9,35 @@
 # define READ 0
 # define WRITE 1
  
+int strToInt(char* number)
+{
+	int i;
+	int response = 0;
+	for(i = 0; number[i] != '\0'; i++)
+	{
+		response = response * 10;
+		if(number[i] == '1')
+			response = response + 1;
+		if(number[i] == '2')
+			response = response + 2;
+		if(number[i] == '3')
+			response = response + 3;
+		if(number[i] == '4')
+			response = response + 4;
+		if(number[i] == '5')
+			response = response + 5;
+		if(number[i] == '6')
+			response = response + 6;
+		if(number[i] == '7')
+			response = response + 7;
+		if(number[i] == '8')
+			response = response + 8;
+		if(number[i] == '9')
+			response = response + 9;
+	}
+	return response;
+}
+
 
 /* 3. Binarización de imagen
 Entrada: Entra el umbral ingresado por pantalla y una imagen 
@@ -40,7 +69,7 @@ Image* convertToBin (int umbral, Image* myImage)
 	return myImage;
 }
 
-pid_t toWrite(int* pipe)
+pid_t toWrite(int* pipe, char* nblack, char* umbral, char* flag, char* image)
 {
 	pid_t pid = fork();
 	if(pid < 0)
@@ -58,7 +87,7 @@ pid_t toWrite(int* pipe)
 		close(pipe[WRITE]);
 		dup2(pipe[READ], STDIN_FILENO);
 
-		execlp("./classification", "-", NULL);
+		execlp("./classification", "-n", nblack, "-u", umbral, "-f", flag, "-i", image, NULL);
 		perror("Fallo de execlp()");
 		exit(-1);
 	}
@@ -66,7 +95,7 @@ pid_t toWrite(int* pipe)
 
 int main(int argc, char *argv[])
 {
-	perror("BIN: Me ejecuto");
+	//perror("BIN: Inicio");
 	int myPipeToClass[2];
 	pipe(myPipeToClass);
 
@@ -75,10 +104,9 @@ int main(int argc, char *argv[])
 	read(STDIN_FILENO, &img->height, sizeof(int));
 	read(STDIN_FILENO, &img->width, sizeof(int));
 	read(STDIN_FILENO, &img->header, sizeof(InfoHeader));
-	perror("BIN: Leo el header");
 
 	img->matrix = (Pixel**)malloc(sizeof(Pixel*) * img->height);
-	perror("BIN: Asigno memoria");
+
 	int i, j;
 
 	for(i = 0; i < img->height; i++)
@@ -93,11 +121,11 @@ int main(int argc, char *argv[])
 			read(STDIN_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 	}
-	perror("BIN: Lei toda la imagen");
 
-	pid_t pidToClass = toWrite(myPipeToClass);
+	pid_t pidToClass = toWrite(myPipeToClass, argv[1], argv[3], argv[5], argv[7]);
 
-	img = convertToBin(10 ,img);
+	img = convertToBin(strToInt(argv[3]) ,img);
+
 	write(myPipeToClass[WRITE], &img->height, sizeof(int));
 	write(myPipeToClass[WRITE], &img->width, sizeof(int));
 	write(myPipeToClass[WRITE], &img->header, sizeof(InfoHeader));
@@ -110,6 +138,6 @@ int main(int argc, char *argv[])
 			write(myPipeToClass[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
 			write(myPipeToClass[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
 		}
-	perror("BIN: Escribi lso datos para mi hijo");
 	wait(&pidToClass);
+	//perror("BIN: Fin");
 }

@@ -107,13 +107,19 @@ int main(int argc, char *argv[])
 	perror("HANDLER: Inicio");
 
 	int i;
+	if (flag == 1)
+	{
+		printf("\n._________________________________.\n");
+		printf("|     image   |    nearly black   |\n");
+		printf("|---------------------------------|\n");
+	}
 	for (i = 0; i < quantityImages; i++)
 	{
 		pid_t processReader = reader(myPipe, umbralClassification, umbralImages, flag, i + 1);
 		read(myPipe[READ], string, 40);
 		wait(&processReader);
-		printf("HANDLER: Mensaje desde imageReader: %s\n", string);
 	}
-	perror("HANDLER: Fin");
+	if (flag == 1)
+		printf("|_________________________________|\n");
 	return 0;
 }

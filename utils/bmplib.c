@@ -76,15 +76,15 @@ Entrada: (int) que corresponde a qué imagen se está guardando
 Descripción: Transforma la matriz binarizada a imagen BMP. Escribe solo una imagen.
 Salida: -
 */
-void binToBmp(int image, Image* myImage)
+void binToBmp(char* image, Image* myImage)
 {
 	char* route;
 	char* number;
 	route = (char*)malloc(sizeof(char)*50);
 	number = (char*)malloc(sizeof(char)*50);
-	strcpy(route,"../images/zimagenbin_");
+	strcpy(route,"../imagesbin/imagenbin_");
 	InfoHeader infoHeader = myImage->header;
-	sprintf(number, "%d", image);
+	sprintf(number, "%s", image);
 	strcat(route, number);
     strcat(route, ".bmp");
 	FILE* myFile =fopen(route, "wb");

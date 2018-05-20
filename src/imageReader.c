@@ -94,7 +94,7 @@ Image* readImg(char* name)
 	return img;
 }
 
-pid_t toGray(int* pipeIn)
+pid_t toGray(int* pipeIn, char* nblack, char* umbral, char* flag, char* image)
 {
 	pid_t pid = fork();
 	if(pid < 0)
@@ -105,14 +105,10 @@ pid_t toGray(int* pipeIn)
 	else if(pid > 0)
 	{
 		close(pipeIn[READ]);
-		perror("READER: Soy el padre, mandare los datos");
-		Image* img = readImg("4");
-		perror("Algo pasa");
+		Image* img = readImg(image);
 		write(pipeIn[WRITE], &img->height, sizeof(int));
 		write(pipeIn[WRITE], &img->width, sizeof(int));
 		write(pipeIn[WRITE], &img->header, sizeof(InfoHeader));
-		perror("READER: Escribi el header");
-		
 		int i, j;
 		for(i = 0; i < img->height; i++)
 		{
@@ -125,14 +121,13 @@ pid_t toGray(int* pipeIn)
 				write(pipeIn[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
 			}
 		}
-		perror("READER: Escribi la imagen");
 		return pid;
 	}
 	else
 	{
 		close(pipeIn[WRITE]);
 		dup2(pipeIn[READ], STDIN_FILENO);
-		execlp("./convertToGray", "-", NULL);
+		execlp("./convertToGray", "-n", nblack, "-u", umbral, "-f", flag, "-i", image, NULL);
 		perror("Fallo de execl()");
 		exit(-1);
 	}
@@ -142,44 +137,26 @@ pid_t toGray(int* pipeIn)
 
 int main(int argc, char *argv[])
 {
-	perror("READER: Me ejecuto");
-	if(argc != 2)
+	//perror("READER: INICIO");
+	if(argc != 8)
 	{
 		perror("## CANTIDAD DE ARGUMENTOS INVALIDA PARA LA APERTURA DE LA IMAGEN ##");
 		exit(0);
 	}
 	int myPipeToGray[2];
 	pipe(myPipeToGray);
-	pid_t pidToGray = toGray(myPipeToGray);
-	wait(&pidToGray);
-	write(STDIN_FILENO, "Funca", 10);
 
-	/*int myPipeToGray[2];
-	pipe(myPipeToGray);
-	perror("READER: Creo proceso hijo");
-	pid_t pidToGray = toGray(myPipeToGray);
-	close(myPipeToGray[READ]);
-	perror("READER: Comienza matriarcado");
-	Image* img = readImg(argv[1]);
-	perror("READER: Comienzo a escribir imagen");
-	write(myPipeToGray[WRITE], &img->height, sizeof(int));
-	write(myPipeToGray[WRITE], &img->width, sizeof(int));
-	write(myPipeToGray[WRITE], &img->header, sizeof(InfoHeader));
-	perror("READER: Header escrito, ahora la matriz");
-	int i, j;
-	for(i = 0; i < img->height; i++)
-		for(j = 0; j < img->width; j++)
-		{
-			if(img->header.bpp == 32)
-				write(myPipeToGray[WRITE], &img->matrix[i][j].alpha, sizeof(unsigned char));
-			write(myPipeToGray[WRITE], &img->matrix[i][j].blue, sizeof(unsigned char));
-			write(myPipeToGray[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
-			write(myPipeToGray[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
-		}
-	perror("READER: Escribi la imagen y espero a que mi hijo termine");
-	wait(&pidToGray);
-	perror("READER: Mi hijo termino");
-	write(STDOUT_FILENO, "Funca", 10);*/
+	/*
+		argv[1] = nearlyblack
+		argv[3] = umbral
+		argv[5] = flag
+		argv[7] = img
 
+	*/
+
+	pid_t pidToGray = toGray(myPipeToGray, argv[1], argv[3], argv[5], argv[7]);
+
+	wait(&pidToGray);
+	//perror("READER: Fin");
 	return 0;
 }

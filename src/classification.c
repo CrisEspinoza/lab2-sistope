@@ -9,6 +9,38 @@
 
 # define READ 0
 # define WRITE 1
+
+
+
+int strToInt(char* number)
+{
+	int i;
+	int response = 0;
+	for(i = 0; number[i] != '\0'; i++)
+	{
+		response = response * 10;
+		if(number[i] == '1')
+			response = response + 1;
+		if(number[i] == '2')
+			response = response + 2;
+		if(number[i] == '3')
+			response = response + 3;
+		if(number[i] == '4')
+			response = response + 4;
+		if(number[i] == '5')
+			response = response + 5;
+		if(number[i] == '6')
+			response = response + 6;
+		if(number[i] == '7')
+			response = response + 7;
+		if(number[i] == '8')
+			response = response + 8;
+		if(number[i] == '9')
+			response = response + 9;
+	}
+	return response;
+}
+
 /*4. Análisis de propiedad
 
 Entrada: Recibe como parametro un umbral y una imagen 
@@ -33,7 +65,7 @@ void classification (int umbral ,Image* myImage)
 		myImage->isNearlyBlack = 0;	
 }
 
-pid_t toWrite(int* pipe)
+pid_t toWrite(int* pipe, char* nblack, char* umbral, char* flag, char* image)
 {
 	pid_t pid = fork();
 	if(pid < 0)
@@ -51,7 +83,7 @@ pid_t toWrite(int* pipe)
 		close(pipe[WRITE]);
 		dup2(pipe[READ], STDIN_FILENO);
 
-		execlp("./writeImage", "-", NULL);
+		execlp("./writeImage", "-n", nblack, "-u", umbral, "-f", flag, "-i", image, NULL);
 		perror("Fallo de execlp()");
 		exit(-1);
 	}
@@ -59,12 +91,11 @@ pid_t toWrite(int* pipe)
 
 int main(int argc, char *argv[])
 {
-	perror("CLASS: Me ejecuto");
+	//perror("CLASS: Inicio");
 	int myPipeToWrite[2];
 	pipe(myPipeToWrite);
 
 	Image* img = (Image*)malloc(sizeof(Image));
-	perror("CLASS: ACAASDA");
 
 	read(STDIN_FILENO, &img->height, sizeof(int));
 	read(STDIN_FILENO, &img->width, sizeof(int));
@@ -86,13 +117,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	pid_t pidToWrite = toWrite(myPipeToWrite);
-	binToBmp(100, img);
-	classification(10, img);
+	pid_t pidToWrite = toWrite(myPipeToWrite, argv[1], argv[3], argv[5], argv[7]);
+
+	classification(strToInt(argv[1]), img);
 
 	write(myPipeToWrite[WRITE], &img->height, sizeof(int));
 	write(myPipeToWrite[WRITE], &img->width, sizeof(int));
 	write(myPipeToWrite[WRITE], &img->header, sizeof(InfoHeader));
+	write(myPipeToWrite[WRITE], &img->isNearlyBlack, sizeof(int));
 	for(i = 0; i < img->height; i++)
 	{
 		for(j = 0; j < img->width; j++)
@@ -105,5 +137,6 @@ int main(int argc, char *argv[])
 		}
 	}
 	wait(&pidToWrite);
+	//perror("CLASS: Fin");
 	
 }

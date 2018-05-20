@@ -29,7 +29,7 @@ Image* convertToGray(Image* myImage)
 	return myImage;
 }
 
-pid_t toBin(int* pipe)
+pid_t toBin(int* pipe, char* nblack, char* umbral, char* flag, char* image)
 {
 	pid_t pid = fork();
 	if(pid < 0)
@@ -47,7 +47,7 @@ pid_t toBin(int* pipe)
 		close(pipe[WRITE]);
 		dup2(pipe[READ], STDIN_FILENO);
 
-		execlp("./convertToBin", "-", NULL);
+		execlp("./convertToBin", "-n", nblack, "-u", umbral, "-f", flag, "-i", image, NULL);
 		perror("Fallo de execlp()");
 		exit(-1);
 	}
@@ -55,18 +55,16 @@ pid_t toBin(int* pipe)
 
 int main(int argc, char *argv[])
 {
-	perror("GRAY: Me ejecuto");
+	//perror("GRAY: Inicio");
 	int myPipeToBin[2];
 	pipe(myPipeToBin);
-	pid_t pidToBin = toBin(myPipeToBin);
+	pid_t pidToBin = toBin(myPipeToBin, argv[1], argv[3], argv[5], argv[7]);
 	
 	Image* img = (Image*)malloc(sizeof(Image));
-	perror("GRAY: Creo estructura de datos");
 	read(STDIN_FILENO, &img->height, sizeof(int));
 	read(STDIN_FILENO, &img->width, sizeof(int));
 	read(STDIN_FILENO, &img->header, sizeof(InfoHeader));
 	img->matrix = (Pixel**)malloc(sizeof(Pixel*) * img->height);
-	perror("GRAY: Matriz");
 	int i, j;
 	for(i = 0; i < img->height; i++)
 	{
@@ -80,9 +78,7 @@ int main(int argc, char *argv[])
 			read(STDIN_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 	}
-	perror("GRAY: Creo el proceso para binarizar");
 	img = convertToGray(img);
-	perror("GRAY: Escribo los datos de la imagen en el pipe");
 	write(myPipeToBin[WRITE], &img->height, sizeof(int));
 	write(myPipeToBin[WRITE], &img->width, sizeof(int));
 	write(myPipeToBin[WRITE], &img->header, sizeof(InfoHeader));
@@ -95,8 +91,7 @@ int main(int argc, char *argv[])
 			write(myPipeToBin[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
 			write(myPipeToBin[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
 		}
-	perror("GRAY: Espero a mi hijo");
 	wait(&pidToBin);
-	perror("GRAY: Termino");
+	//perror("GRAY: Fin");
 	return 0;
 }
