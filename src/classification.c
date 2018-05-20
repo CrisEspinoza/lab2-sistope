@@ -5,6 +5,7 @@
 # include <sys/poll.h>
 
 # include "../utils/structs.h"
+# include "../utils/bmplib.c"
 
 # define READ 0
 # define WRITE 1
@@ -48,7 +49,7 @@ pid_t toWrite(int* pipe)
 	else
 	{
 		close(pipe[WRITE]);
-		dup2(pipe[READ], STDOUT_FILENO);
+		dup2(pipe[READ], STDIN_FILENO);
 
 		execlp("./writeImage", "-", NULL);
 		perror("Fallo de execlp()");
@@ -58,14 +59,16 @@ pid_t toWrite(int* pipe)
 
 int main(int argc, char *argv[])
 {
+	perror("CLASS: Me ejecuto");
 	int myPipeToWrite[2];
 	pipe(myPipeToWrite);
 
 	Image* img = (Image*)malloc(sizeof(Image));
+	perror("CLASS: ACAASDA");
 
-	read(STDOUT_FILENO, &img->height, sizeof(int));
-	read(STDOUT_FILENO, &img->width, sizeof(int));
-	read(STDOUT_FILENO, &img->header, sizeof(InfoHeader));
+	read(STDIN_FILENO, &img->height, sizeof(int));
+	read(STDIN_FILENO, &img->width, sizeof(int));
+	read(STDIN_FILENO, &img->header, sizeof(InfoHeader));
 
 	img->matrix = (Pixel**)malloc(sizeof(Pixel*) * img->height);
 	int i, j;
@@ -75,21 +78,23 @@ int main(int argc, char *argv[])
 		img->matrix[i] = (Pixel*)malloc(sizeof(Pixel) * img->width);
 		for(j = 0; j < img->width; j++)
 		{
-			read(STDOUT_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
+			if(img->header.bpp == 32)
+				read(STDIN_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 	}
 
 	pid_t pidToWrite = toWrite(myPipeToWrite);
-
+	binToBmp(100, img);
 	classification(10, img);
 
 	write(myPipeToWrite[WRITE], &img->height, sizeof(int));
 	write(myPipeToWrite[WRITE], &img->width, sizeof(int));
 	write(myPipeToWrite[WRITE], &img->header, sizeof(InfoHeader));
 	for(i = 0; i < img->height; i++)
+	{
 		for(j = 0; j < img->width; j++)
 		{
 			if(img->header.bpp == 32)
@@ -98,7 +103,7 @@ int main(int argc, char *argv[])
 			write(myPipeToWrite[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
 			write(myPipeToWrite[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
 		}
-
+	}
 	wait(&pidToWrite);
 	
 }

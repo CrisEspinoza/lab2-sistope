@@ -56,7 +56,7 @@ pid_t toWrite(int* pipe)
 	else
 	{
 		close(pipe[WRITE]);
-		dup2(pipe[READ], STDOUT_FILENO);
+		dup2(pipe[READ], STDIN_FILENO);
 
 		execlp("./classification", "-", NULL);
 		perror("Fallo de execlp()");
@@ -66,16 +66,19 @@ pid_t toWrite(int* pipe)
 
 int main(int argc, char *argv[])
 {
+	perror("BIN: Me ejecuto");
 	int myPipeToClass[2];
 	pipe(myPipeToClass);
 
 	Image* img = (Image*)malloc(sizeof(Image));
 
-	read(STDOUT_FILENO, &img->height, sizeof(int));
-	read(STDOUT_FILENO, &img->width, sizeof(int));
-	read(STDOUT_FILENO, &img->header, sizeof(InfoHeader));
+	read(STDIN_FILENO, &img->height, sizeof(int));
+	read(STDIN_FILENO, &img->width, sizeof(int));
+	read(STDIN_FILENO, &img->header, sizeof(InfoHeader));
+	perror("BIN: Leo el header");
 
 	img->matrix = (Pixel**)malloc(sizeof(Pixel*) * img->height);
+	perror("BIN: Asigno memoria");
 	int i, j;
 
 	for(i = 0; i < img->height; i++)
@@ -83,17 +86,18 @@ int main(int argc, char *argv[])
 		img->matrix[i] = (Pixel*)malloc(sizeof(Pixel) * img->width);
 		for(j = 0; j < img->width; j++)
 		{
-			read(STDOUT_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
+			if(img->header.bpp == 32)
+				read(STDIN_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 	}
+	perror("BIN: Lei toda la imagen");
 
 	pid_t pidToClass = toWrite(myPipeToClass);
 
 	img = convertToBin(10 ,img);
-
 	write(myPipeToClass[WRITE], &img->height, sizeof(int));
 	write(myPipeToClass[WRITE], &img->width, sizeof(int));
 	write(myPipeToClass[WRITE], &img->header, sizeof(InfoHeader));
@@ -106,5 +110,6 @@ int main(int argc, char *argv[])
 			write(myPipeToClass[WRITE], &img->matrix[i][j].green, sizeof(unsigned char));
 			write(myPipeToClass[WRITE], &img->matrix[i][j].red, sizeof(unsigned char));
 		}
+	perror("BIN: Escribi lso datos para mi hijo");
 	wait(&pidToClass);
 }

@@ -3,15 +3,15 @@
 # include <unistd.h>
 # include <string.h>
 # include <sys/wait.h>
-# include <sys/poll.h>
 
 # include "../utils/structs.h"
+# include "../utils/bmplib.c"
 
 # define READ 0
 # define WRITE 1
 
 
-void binToBmp(int image, Image* myImage)
+void binToBmpo(int image, Image* myImage)
 {
 	char* route;
 	char* number;
@@ -78,8 +78,6 @@ void response(int image, Image* myImage, int flag)
 		printf("|  imagen_%i   |         yes       |\n", image);
 	else if (flag == 1 )
 		printf("|  imagen_%i   |         no        |\n", image);
-	//binToBmp(image, myImage); // Funcion que transforma la matriz binarizada a BMP.
-
 	if (flag == 1)
 		printf("|_________________________________|\n");
 }
@@ -87,11 +85,12 @@ void response(int image, Image* myImage, int flag)
 
 int main(int argc, char *argv[])
 {
+	perror("WRITE: Me ejecuto");
 	Image* img = (Image*)malloc(sizeof(Image));
 
-	read(STDOUT_FILENO, &img->height, sizeof(int));
-	read(STDOUT_FILENO, &img->width, sizeof(int));
-	read(STDOUT_FILENO, &img->header, sizeof(InfoHeader));
+	read(STDIN_FILENO, &img->height, sizeof(int));
+	read(STDIN_FILENO, &img->width, sizeof(int));
+	read(STDIN_FILENO, &img->header, sizeof(InfoHeader));
 
 	img->matrix = (Pixel**)malloc(sizeof(Pixel*) * img->height);
 	int i, j;
@@ -102,14 +101,14 @@ int main(int argc, char *argv[])
 		for(j = 0; j < img->width; j++)
 		{
 			if(img->header.bpp == 32)
-				read(STDOUT_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
-			read(STDOUT_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
+				read(STDIN_FILENO, &img->matrix[i][j].alpha, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].blue, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].green, sizeof(unsigned char));
+			read(STDIN_FILENO, &img->matrix[i][j].red, sizeof(unsigned char));
 		}
 	}
 	perror("Llega sano y salvo a escribir la imagen");
-	binToBmp(1, img);
+	binToBmp(5, img);
 	response(1, img, 1);
 
 }
