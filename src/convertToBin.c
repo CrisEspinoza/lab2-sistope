@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 
 	pid_t pidToClass = toWrite(myPipeToClass, argv[1], argv[3], argv[5], argv[7]);
 
-	img = convertToBin(strToInt(argv[3]) ,img);
+	img = convertToBin(strToInt(argv[1]) ,img);
 
 	write(myPipeToClass[WRITE], &img->height, sizeof(int));
 	write(myPipeToClass[WRITE], &img->width, sizeof(int));

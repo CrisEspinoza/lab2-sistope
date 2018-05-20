@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 
 	pid_t pidToWrite = toWrite(myPipeToWrite, argv[1], argv[3], argv[5], argv[7]);
 
-	classification(strToInt(argv[1]), img);
+	classification(strToInt(argv[3]), img);
 
 	write(myPipeToWrite[WRITE], &img->height, sizeof(int));
 	write(myPipeToWrite[WRITE], &img->width, sizeof(int));
